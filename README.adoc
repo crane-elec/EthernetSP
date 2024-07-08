@@ -1,16 +1,60 @@
-:repository-owner: arduino-libraries
-:repository-name: Ethernet
+:repository-owner: crane-elec
+:repository-name: EthernetSP
 
-= {repository-name} Library for Arduino =
+= {repository-name} Library for Spresense with W5500-Ether add-on board =
 
-image:https://github.com/{repository-owner}/{repository-name}/actions/workflows/check-arduino.yml/badge.svg["Check Arduino status", link="https://github.com/{repository-owner}/{repository-name}/actions/workflows/check-arduino.yml"]
-image:https://github.com/{repository-owner}/{repository-name}/actions/workflows/compile-examples.yml/badge.svg["Compile Examples status", link="https://github.com/{repository-owner}/{repository-name}/actions/workflows/compile-examples.yml"]
-image:https://github.com/{repository-owner}/{repository-name}/actions/workflows/spell-check.yml/badge.svg["Spell Check status", link="https://github.com/{repository-owner}/{repository-name}/actions/workflows/spell-check.yml"]
+This library is a modified version of the standard Arduino Ethernet library, specifically adapted for the "W5500-Ether" add-on board for Spresense.
 
-With the Arduino Ethernet Shield, this library allows an Arduino board to connect to the internet.
+https://crane-elec.co.jp/products/vol-20/
 
-For more information about this library please visit us at
-https://www.arduino.cc/en/Reference/{repository-name}
+image::extras/w5500-eth.jpg[]
+
+== Usage
+Most features are based on the original library. There are three differences from the original Ethernet library.
+
+1:
+change from
+----
+#include <Ethernet.h>
+----
+to
+----
+#include <EthernetSP.h>
+----
+
+2:
+At the setup(), insert the following command according to the reset jumper setting:
+
+When SJ1 is shorted at 1-2, use:
+----
+W5500ETH_reset(SJ1_12);
+----
+When SJ1 is shorted at 2-3, use:
+----
+W5500ETH_reset(SJ1_23);
+----
+
+3:
+Insert the following command according to the SPI-SS jumper setting:
+
+When SJ2 is shorted at 1-2, use:
+----
+Ethernet.init(SJ2_12);
+----
+When SJ2 is shorted at 2-3, use:
+----
+//Ethernet.init(); // Do nothing.
+----
+
+Other than that, it is the same as the original library.
+
+== Original library
+
+This library is based on the original Ethernet library provided by Arduino. You can find the original library at the following location:
+
+link:https://github.com/arduino-libraries/Ethernet[Arduino Ethernet Library]
+
+Please refer to the original library for more details about its usage and functionalities.
 
 == License ==
 
