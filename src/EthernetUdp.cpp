@@ -98,12 +98,20 @@ size_t EthernetUDP::write(const uint8_t *buffer, size_t size)
 
 int EthernetUDP::parsePacket()
 {
+	uint8_t cnt = 0;
 	// discard any remaining bytes in the last packet
 	while (_remaining) {
 		// could this fail (loop endlessly) if _remaining > 0 and recv in read fails?
 		// should only occur if recv fails after telling us the data is there, lets
 		// hope the w5100 always behaves :)
-		read((uint8_t *)NULL, _remaining);
+		if(read((uint8_t *)NULL, _remaining) == -1)
+		{
+			if( 100 < (cnt++) ) // TODO: Need to fix magic number.
+			{
+				//Serial.println("parsePacket() loop!");
+				return 0;
+			}
+		}
 	}
 
 	if (Ethernet.socketRecvAvailable(sockindex) > 0) {

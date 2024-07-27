@@ -17,8 +17,9 @@ void W5500ETH_reset(uint8_t sj1_rst)
 {
 	pinMode(sj1_rst, OUTPUT);
 	digitalWrite(sj1_rst, LOW);
-	delay(50);
+	delay(1);
 	digitalWrite(sj1_rst, HIGH);
+	delay(50);
 	return;
 }
 
