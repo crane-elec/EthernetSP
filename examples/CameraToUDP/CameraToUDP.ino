@@ -1,3 +1,15 @@
+// Spresenseカメラの映像をUDP送信します。
+// 受信側PCでは、 https://github.com/crane-elec/UDPJPG のテストソフト UDP_JPG.exe を起動しておきます。
+// UDPポートは、50001 固定です。
+// UDPを受信してカメラ画像が表示されます。
+// 本サンプルの、W5500とPCのIPアドレスは環境に応じて変更してください。
+// 一般的にはIPアドレスの上位3つは、ルーターのIPアドレスと同じにします。
+// ルーターIP 192.168.1.1 なら192.168.1.XXX
+// ルーターIP 192.168.100.1 なら192.168.100.XXX
+// など。
+// 
+
+
 #include <EthernetSP.h>
 #include <EthernetUdp.h>
 #include <Camera.h>
@@ -9,10 +21,10 @@
 // UDP settings
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 IPAddress ip(192, 168, 100, 234); // W5500 IP
-unsigned int localPort = 8888;    // W5500 port
+unsigned int localPort = 50000;    // W5500 port
 
 IPAddress ip_remote(192,168,100,49); // Your PC IP
-unsigned int Port_remote = 8889;     // Your PC receive port
+unsigned int Port_remote = 50001;     // Your PC receive port
 
 char RxBuffer[RX_BUFFER_SIZE];
 
@@ -143,7 +155,7 @@ void setup()
 void loop()
 {
     CamImage img = theCamera.takePicture();
-    delay(1);
+    delay(30);//PC側サンプルアプリ(UDPJPG.exe)の、フレーム間30msec以上あける仕組み、に対応させている。
 
     bool tx_result;
     uint16_t tx_size;
