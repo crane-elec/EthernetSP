@@ -502,12 +502,22 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 	return len;
 }
 
-void W5100Class::execCmdSn(SOCKET s, SockCMD _cmd)
+bool W5100Class::execCmdSn(SOCKET s, SockCMD _cmd)
 {
+	bool res = true;
+	uint8_t cnt = 0;
 	// Send command to socket
 	writeSnCR(s, _cmd);
-	// Wait for command to complete
-	while (readSnCR(s)) ;
+	// Wait for command to complete <- maybe not need. need readSnIR().
+	while (readSnCR(s))
+	{
+		if( 100 < cnt++ ) // TODO: Need to fix magic number.
+		{
+			res = false;
+			break;
+		}
+	}
+	return res;
 }
 
 #undef SPI

@@ -515,30 +515,50 @@ bool EthernetClass::socketStartUDP(uint8_t s, uint8_t* addr, uint16_t port)
 
 bool EthernetClass::socketSendUDP(uint8_t s)
 {
+	uint32_t cur = millis();
+	uint8_t snIR = 0;
+	uint8_t snSR = 0;
+	uint8_t res = true;
+
 	SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
-	W5100.execCmdSn(s, Sock_SEND);
 
-	/* +2008.01 bj */
-	while ( (W5100.readSnIR(s) & SnIR::SEND_OK) != SnIR::SEND_OK ) {
-		if (W5100.readSnIR(s) & SnIR::TIMEOUT) {
-			/* +2008.01 [bj]: clear interrupt */
-			W5100.writeSnIR(s, (SnIR::SEND_OK|SnIR::TIMEOUT));
-			SPI.endTransaction();
-			//Serial.printf("sendUDP timeout\n");
-			return false;
-		}
+	if(W5100.execCmdSn(s, Sock_SEND) == false)
+	{
 		SPI.endTransaction();
-		yield();
-		SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
+		//Serial.println( "Failed to send UDP command." );
+		return false;
 	}
+	
+	do{
+		snIR = W5100.readSnIR(s);
+		snSR = W5100.readSnSR(s);
+		if (snSR == SnSR::CLOSED)
+		{
+			//Serial.println( "SOCK_CLOSED!" );
+			res = false;
+			break;
+		}
+		else if (snIR & SnIR::TIMEOUT)
+		{
+			//Serial.println( "timeout!" );
+			res = false;
+			break;
+		}
+		else if( 500 < (millis() - cur) ) // TODO: Need to fix magic number. 
+		{
+			//Serial.print( "millis()! " );
+			Serial.println( millis() );
+			res = false;
+			break;
+		}
+	}while( (snIR & SnIR::SEND_OK) != SnIR::SEND_OK );
 
-	/* +2008.01 bj */
 	W5100.writeSnIR(s, SnIR::SEND_OK);
 	SPI.endTransaction();
 
 	//Serial.printf("sendUDP ok\n");
 	/* Sent ok */
-	return true;
+	return res;
 }
 
 #undef SPI

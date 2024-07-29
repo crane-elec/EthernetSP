@@ -36,7 +36,7 @@
 // Spresense with W5500-Ether add-on. When SJ2 is "2-3 short", must be SPI_MODE3
 #if defined(ARDUINO_ARCH_SPRESENSE)
 #undef SPI_ETHERNET_SETTINGS
-#define SPI_ETHERNET_SETTINGS SPISettings(13000000, MSBFIRST, SPI_MODE3)
+#define SPI_ETHERNET_SETTINGS SPISettings(12000000, MSBFIRST, SPI_MODE3)
 #define SPI5_CS 24
 #endif
 
@@ -149,7 +149,7 @@ public:
   inline void setRetransmissionTime(uint16_t timeout) { writeRTR(timeout); }
   inline void setRetransmissionCount(uint8_t retry) { writeRCR(retry); }
 
-  static void execCmdSn(SOCKET s, SockCMD _cmd);
+  static bool execCmdSn(SOCKET s, SockCMD _cmd);
 
 
   // W5100 Registers
