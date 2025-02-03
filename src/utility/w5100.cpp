@@ -14,6 +14,16 @@
 
 #if defined(ARDUINO_ARCH_SPRESENSE)
 #define SPI SPI5
+static void SPI_transfer(uint8_t* ptr, int size){
+  irqstate_t flags;
+  flags = enter_critical_section();
+  SPI.transfer(ptr, size);
+  leave_critical_section(flags);
+}
+#else
+static void SPI_transfer(uint8_t* ptr, int size){
+  SPI.transfer(ptr, size);
+}
 #endif
 
 /***************************************************/
@@ -325,9 +335,9 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 		cmd[1] = addr & 0xFF;
 		cmd[2] = ((len >> 8) & 0x7F) | 0x80;
 		cmd[3] = len & 0xFF;
-		SPI.transfer(cmd, 4);
+		SPI_transfer(cmd, 4);
 #ifdef SPI_HAS_TRANSFER_BUF
-		SPI.transfer(buf, NULL, len);
+		SPI_transfer(buf, NULL, len);
 #else
 		// TODO: copy 8 bytes at a time to cmd[] and block transfer
 		for (uint16_t i=0; i < len; i++) {
@@ -379,7 +389,7 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 			for (uint8_t i=0; i < len; i++) {
 				cmd[i + 3] = buf[i];
 			}
-			SPI.transfer(cmd, len + 3);
+			SPI_transfer(cmd, len + 3);
 		} else {
 #if defined(ARDUINO_ARCH_SPRESENSE)
 			// Spresense SPI peripheral must send one transfer, one time.
@@ -388,11 +398,11 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 			{
 				memcpy(txbuf, cmd, 3);
 				memcpy(txbuf + 3, buf, len);
-				SPI.transfer(txbuf, 3 + len);
+				SPI_transfer(txbuf, 3 + len);
 				free(txbuf);
 			}
 #else
-			SPI.transfer(cmd, 3);
+			SPI_transfer(cmd, 3);
 #ifdef SPI_HAS_TRANSFER_BUF
 			SPI.transfer(buf, NULL, len);
 #else
@@ -426,7 +436,7 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 			cmd[1] = addr >> 8;
 			cmd[2] = addr & 0xFF;
 			cmd[3] = 0;
-			SPI.transfer(cmd, 4); // TODO: why doesn't this work?
+			SPI_transfer(cmd, 4); // TODO: why doesn't this work?
 			buf[i] = cmd[3];
 			addr++;
 			#endif
@@ -438,9 +448,9 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 		cmd[1] = addr & 0xFF;
 		cmd[2] = (len >> 8) & 0x7F;
 		cmd[3] = len & 0xFF;
-		SPI.transfer(cmd, 4);
+		SPI_transfer(cmd, 4);
 		memset(buf, 0, len);
-		SPI.transfer(buf, len);
+		SPI_transfer(buf, len);
 		resetSS();
 	} else { // chip == 55
 		setSS();
@@ -488,14 +498,14 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 		{
 			memset(rxbuf, 0, 3 + len);
 			memcpy(rxbuf, cmd, 3);
-			SPI.transfer(rxbuf, 3 + len);// [in,out] buf Buffer to send and receive.
+			SPI_transfer(rxbuf, 3 + len);// [in,out] buf Buffer to send and receive.
 			memcpy(buf, rxbuf + 3, len);
 			free(rxbuf);
 		}
 		#else
-		SPI.transfer(cmd, 3);
+		SPI_transfer(cmd, 3);
 		memset(buf, 0, len);
-		SPI.transfer(buf, len);
+		SPI_transfer(buf, len);
 		#endif
 		resetSS();
 	}
